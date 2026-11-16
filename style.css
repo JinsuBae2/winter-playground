@@ -1,0 +1,221 @@
+/* 테마: 포장마차 나무판 위에 크림색 메뉴판. 그림(구리 불판, 등불, 나무 매대)과 같은 색에서 뽑았다. */
+:root {
+  --bg: #2b1a10; --text: #fbf1dc; --dim: #d9c3a3;            /* 나무 바탕 위 글자 */
+  --panel: #fdf3dd; --panel2: #f3ddb2; --ink: #4a2c17; --ink-dim: #8a6a4c; --line: #b98a4e;  /* 메뉴판 */
+  --accent: #f0a93b; --red: #d6453a; --good: #6fd66b; --bad: #ff5a4e; --wood: #b9793f;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--text); min-height: 100vh;
+  background: var(--bg) repeating-linear-gradient(90deg, #0000 0 58px, #00000026 58px 60px) fixed;
+  font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none;
+}
+#app { max-width: 480px; margin: 0 auto; padding: 12px 12px 72px; }
+img { -webkit-user-drag: none; pointer-events: none; }
+h1 { font-size: 36px; margin: 4px 0 14px; text-align: center; color: var(--accent); text-shadow: 0 3px 0 #6b3a0c, 0 6px 10px #0008; }
+h1, h2, button, .float, .bubble, .bld b { font-family: Jua, -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 400; }
+h2 { font-size: 19px; margin: 0 0 8px; }
+p { margin: 4px 0; }
+.dim { color: var(--dim); font-size: 14px; font-weight: 400; }
+.note { background: #fff8e6; color: var(--ink); border-left: 5px solid var(--accent); padding: 8px 12px; border-radius: 10px; margin: 8px 0; box-shadow: 0 3px 0 #1a0f08; }
+
+/* 메뉴판(카드)과 나무 손잡이 같은 버튼 */
+section {
+  background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px; margin: 10px 0; box-shadow: 0 4px 0 #1a0f08;
+}
+section .dim, button .dim, button small { color: var(--ink-dim); }
+button {
+  font: inherit; color: var(--ink); background: linear-gradient(#fff9ea, var(--panel2)); border: 2px solid var(--line);
+  border-radius: 14px; padding: 10px 12px; min-height: 48px; width: 100%; margin: 4px 0;
+  cursor: pointer; text-align: left; transition: transform .08s; box-shadow: 0 3px 0 #8a6236;
+}
+button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #8a6236; }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button.big {
+  background: linear-gradient(#ea5f4f, #c8382e); color: #fff; text-align: center; font-size: 19px;
+  border-color: #8f241d; box-shadow: 0 4px 0 #8f241d; text-shadow: 0 2px 0 #8f241d;
+}
+button.big:active:not(:disabled) { box-shadow: 0 2px 0 #8f241d; }
+button small { display: block; }
+button.item { display: grid; grid-template-columns: 46px 1fr; align-items: center; gap: 2px 10px; }
+button.item .ic { font-size: 30px; grid-row: span 2; text-align: center; }
+.pips i { display: inline-block; width: 14px; height: 7px; border-radius: 4px; background: #dcc7a2; margin-right: 3px; }
+.pips i.on { background: var(--red); }
+.row { display: flex; gap: 8px; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 3px 0; border-bottom: 1px dashed #d9c3a3; } tr:last-child td { border: 0; }
+td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* 붕어빵: 세 장(덜 익음/황금/탐)을 겹치고 익은 정도만큼 위 장을 드러낸다 */
+.fish { position: relative; display: block; aspect-ratio: 512 / 320; }
+.fish img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fish .g { opacity: var(--p, 0); }
+.fish .b { opacity: var(--over, 0); }
+
+.logo { display: block; width: 210px; margin: 8px auto 0; animation: bob 2.4s ease-in-out infinite; filter: drop-shadow(0 6px 8px #0008); }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-3deg); } }
+
+/* 영업 화면: 포장마차 안에서 본 골목 */
+.scene {
+  position: relative; aspect-ratio: 15 / 8; border-radius: 14px; overflow: hidden;
+  background: #6b3a1c url(assets/web/scene_bg.webp) center / cover; border: 2px solid #6b4526; box-shadow: 0 4px 0 #1a0f08;
+}
+.scene.snow::after, .map::after {
+  content: ""; position: absolute; inset: -100px 0 0 0; pointer-events: none; z-index: 3;
+  background-image: radial-gradient(#fff 1.5px, transparent 2px), radial-gradient(#fffc 1px, transparent 2px);
+  background-size: 60px 60px, 37px 37px; background-position: 0 0, 20px 30px;
+  animation: snow 4s linear infinite;
+}
+@keyframes snow { to { transform: translateY(100px); } }
+/* 산 장비가 포장마차에 보인다. 단계가 오르면 더 크고 밝아진다 */
+.gear { position: absolute; inset: 4px 8px auto; display: flex; align-items: flex-start; pointer-events: none; }
+.gear span, .g-auto { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 3px #000a); }
+.gear img { display: block; height: 42px; }
+.gear .l2 img { height: 54px; }
+.g-sign { margin-left: auto; filter: drop-shadow(0 0 6px #ffb347); }
+.g-sign.l2 { animation: neon .9s ease-in-out infinite alternate; }
+@keyframes neon { to { filter: drop-shadow(0 0 12px #ff5ad0) brightness(1.25); } }
+.g-auto { position: absolute; left: 0; top: 0; width: 15%; }
+.g-auto img { width: 100%; }
+.plate.fire1 .burner { width: 21%; }
+.plate.fire2 .burner { width: 25%; background: radial-gradient(#fff, #8fd3ff 30%, #3b8cff 55%, #ff6a2b 75%, #5a1c0a 90%); }
+.warmer.l1 { border-color: #ffb347; box-shadow: inset 0 0 14px #ff9a3c55; }
+.warmer.l2 { border-color: #ffd76a; box-shadow: inset 0 0 22px #ffb347aa, 0 0 10px #ffb34766; }
+.slots { position: absolute; inset: 0 6px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.slot { position: relative; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; }
+.slot > div { display: flex; flex-direction: column; align-items: center; animation: walkin .3s ease-out; }
+@keyframes walkin { from { transform: translateX(40px); opacity: 0; } }
+.bubble {
+  display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0 6px; background: #fffdf5; color: var(--ink); border-radius: 12px;
+  padding: 2px 8px; font-size: 15px; position: relative; box-shadow: 0 2px 4px #0006;
+}
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fffdf5; border-bottom: 0; }
+.bubble .ok { opacity: .35; text-decoration: line-through; }
+.person { height: 92px; width: 92px; margin-top: 5px; filter: drop-shadow(0 2px 3px #0008); }
+.slot.angry .person { animation: shake .3s infinite; filter: drop-shadow(0 0 6px var(--bad)); }
+@keyframes shake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.who { display: block; font-size: 11px; line-height: 1.2; height: 27px; overflow: hidden; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; padding-top: 2px; }
+.who b { color: #ffe9a8; }
+.pat { display: block; width: 80%; height: 6px; background: #0008; border-radius: 3px; overflow: hidden; margin: 1px 0 6px; }
+.pat i { display: block; height: 100%; background: var(--good); }
+.slot.angry .pat i { background: var(--bad); }
+
+.hud { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+.hud b { color: var(--accent); }
+.hud button { width: auto; min-height: 32px; padding: 2px 12px; margin: 0 0 0 auto; font-size: 14px; }
+.time { height: 8px; background: #0006; border-radius: 4px; margin: 6px 0 8px; overflow: hidden; }
+.time i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), var(--accent)); }
+
+/* 보온 진열장 */
+.warmer {
+  background: linear-gradient(#fff3, #fff1); border: 2px solid #e8c58a88; border-bottom: 8px solid var(--wood);
+  border-radius: 10px 10px 4px 4px; padding: 4px 6px; min-height: 50px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+}
+.warmer > small { color: var(--dim); margin-right: 4px; }
+.wf { position: relative; width: 46px; --p: 1; animation: drop .25s ease-out; }
+.wf b { position: absolute; right: -2px; bottom: -6px; font-size: 13px; }
+.wf.under { --p: .3; }
+.wf.over { --over: .45; }
+.wf.cold { filter: saturate(.3) brightness(.75); }
+@keyframes drop { from { transform: translateY(-14px) scale(1.3); opacity: 0; } }
+
+/* 붕어빵 틀: 가운데 불을 둔 회전식 주물 원판 */
+.plate {
+  position: relative; width: min(100%, 356px); aspect-ratio: 1; margin: 10px auto 0;
+  background: url(assets/web/plate.webp) center / 100% 100%; filter: drop-shadow(0 8px 8px #0008);
+}
+.burner {
+  position: absolute; left: 50%; top: 50%; width: 17%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(#fff3c4, #ffb347 35%, #ff6a2b 60%, #5a1c0a 85%);
+  box-shadow: 0 0 26px 8px #ff7a2f66; animation: flame .5s ease-in-out infinite alternate;
+}
+@keyframes flame { to { box-shadow: 0 0 34px 14px #ff7a2f88; transform: translate(-50%, -50%) scale(1.07); } }
+.mold {
+  position: absolute; transform: translate(-50%, -50%); width: 19.5%; aspect-ratio: 1; min-height: 0; margin: 0; padding: 0;
+  border: 0; border-radius: 50%; background: none; box-shadow: none; text-align: center; font-size: 12px; line-height: 1; color: #fff;
+}
+.plate.n4 .mold { width: 30%; font-size: 15px; }
+.plate.n6 .mold { width: 24.5%; font-size: 14px; }
+.mold:active:not(:disabled) { transform: translate(-50%, -50%) scale(.94); box-shadow: none; }
+.rot { position: absolute; inset: 0; display: block; transform: rotate(var(--rot)); }
+.cav { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mold .fish { position: absolute; left: 7%; top: 23%; width: 82%; }
+.mold[data-s="empty"] .fish { display: none; }
+.mold .lbl { z-index: 3; position: absolute; left: 0; right: 0; bottom: 6%; font-family: Jua, sans-serif; text-shadow: 0 1px 0 #000, 0 0 4px #000, 0 0 6px #000; }
+.mold[data-s="empty"] .lbl { color: #f1dfc0; }
+.mold[data-s~="perfect"] { animation: glow .35s ease-in-out infinite alternate; color: var(--good); }
+/* 자동 뒤집개가 굽는 첫 면: 게이지를 흐리게 해서 손댈 필요 없음을 보인다 */
+.mold[data-s~="auto"] { color: var(--dim); }
+.mold[data-s~="auto"] .hand { display: none; }
+.mold[data-s~="auto"] .ring { opacity: .25; }
+.mold[data-s~="over"] { color: var(--accent); }
+.mold[data-s~="burnt"] { color: var(--bad); }
+@keyframes glow { from { box-shadow: 0 0 6px 1px var(--good); } to { box-shadow: 0 0 22px 6px var(--good); } }
+.mold.pop .fish, .mold.pop .cav { animation: pop .18s ease-out; }
+.mold.flip .fish { animation: flip .3s ease-out; }
+@keyframes pop { 50% { transform: scale(1.12); } }
+@keyframes flip { 50% { transform: rotateX(180deg) scale(1.3); } }
+/* 굽기 게이지: 틀 그림 바깥을 두르고 그림보다 위에 그린다. 흰 점이 초록 호에 올 때 누른다 */
+.ring, .hand { position: absolute; inset: -7px; border-radius: 50%; pointer-events: none; z-index: 2; }
+.ring {
+  background: conic-gradient(#3a2a1e 0 calc(var(--z0) * 1turn), var(--good) 0 calc(var(--z1) * 1turn), var(--accent) 0 calc(var(--z2) * 1turn), var(--bad) 0);
+  -webkit-mask: radial-gradient(closest-side, #0000 calc(100% - 9px), #000 calc(100% - 8px));
+  mask: radial-gradient(closest-side, #0000 calc(100% - 9px), #000 calc(100% - 8px));
+}
+.hand { transform: rotate(calc(var(--g, 0) * 1turn)); }
+.hand::after {
+  content: ""; position: absolute; top: -3px; left: 50%; width: 14px; height: 14px; margin-left: -7px;
+  border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #2b1a10, 0 0 8px #fff;
+}
+.mold[data-s="empty"] .ring, .mold[data-s="empty"] .hand { display: none; }
+
+/* 떠오르는 판정 글자 */
+.float {
+  position: absolute; left: 50%; top: 10%; z-index: 5; white-space: nowrap; pointer-events: none; color: #fff;
+  font-size: 20px; text-shadow: 0 2px 0 #000, 0 0 6px #000; animation: rise .8s ease-out forwards;
+}
+.float.perfect { color: #ffe066; font-size: 24px; } .float.under { color: #e8e2d6; } .float.auto { color: #bfe3ff; font-size: 15px; }
+.float.over { color: var(--accent); } .float.burnt, .float.lost { color: var(--bad); } .float.sale { color: #9af09a; }
+@keyframes rise { from { transform: translate(-50%, 0) scale(.6); } 20% { transform: translate(-50%, -8px) scale(1.2); } to { transform: translate(-50%, -46px); opacity: 0; } }
+
+.ico { width: 1.4em; height: 1.4em; vertical-align: -.35em; }
+.ic img { width: 42px; height: 42px; display: block; margin: 0 auto; }
+.wf b .ico { width: 20px; height: 20px; }
+.fills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.fills button { width: auto; flex: 1 1 30%; text-align: center; margin: 0; position: relative; }
+.fills button[aria-pressed="true"] { background: linear-gradient(#ffd27a, var(--accent)); border-color: #8a5a1a; box-shadow: 0 3px 0 #8a5a1a, 0 0 0 3px #fff6; }
+.fills .need { position: absolute; top: -9px; right: -5px; background: var(--red); color: #fff; border-radius: 12px; min-width: 24px; padding: 0 7px; font-size: 13px; box-shadow: 0 2px 0 #8f241d; }
+.fills .need:empty { display: none; }
+
+/* 지도 */
+.map { position: relative; aspect-ratio: 5 / 6; border-radius: 16px; overflow: hidden; background: #dfe8f2 center / cover; margin: 8px 0; border: 2px solid #6b4526; box-shadow: 0 4px 0 #1a0f08; }
+.map.town { background-image: url(assets/web/map_town.webp); }
+.map.city { background-image: url(assets/web/map_city.webp); }
+.bld {
+  position: absolute; transform: translate(-50%, -50%); width: 124px; min-height: 0; margin: 0; padding: 0;
+  background: none; border: 0; box-shadow: none; text-align: center; color: #fff; z-index: 4;
+}
+.bld:active:not(:disabled) { transform: translate(-50%, -50%) scale(.94); box-shadow: none; }
+.bld img { display: block; width: 100px; height: 100px; margin: 0 auto -8px; filter: drop-shadow(0 5px 3px #0006); }
+.bld:disabled { opacity: 1; }
+.bld:disabled img { filter: grayscale(1) brightness(.55) opacity(.8); }
+.bld b { display: block; width: fit-content; margin: 0 auto; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 10px; padding: 0 8px; font-size: 13px; }
+.bld small { width: fit-content; margin: 2px auto 0; background: #4a2c17cc; border-radius: 8px; padding: 0 6px; font-size: 11px; color: #fff; }
+.bld.main img { width: 132px; height: 132px; margin-left: -4px; animation: bob 2s ease-in-out infinite; }
+.bld.main b { background: var(--red); color: #fff; border-color: #8f241d; font-size: 15px; }
+
+#toast {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); margin: 0; z-index: 9;
+  background: #1a0f08e6; color: var(--text); padding: 8px 16px; border-radius: 20px; pointer-events: none;
+  opacity: 0; transition: opacity .2s; white-space: nowrap;
+}
+#toast.on { opacity: 1; }
+
+.ending { text-align: center; }
+.ending .icon { font-size: 72px; line-height: 1.2; animation: pop .5s ease-out; }
+.endimg { display: block; width: 100%; border-radius: 14px; margin-bottom: 8px; border: 2px solid #6b4526; box-shadow: 0 4px 0 #1a0f08; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }

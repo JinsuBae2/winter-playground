@@ -1,0 +1,11 @@
+{
+  "name": "bungeoppang-tycoon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 5173",
+    "test": "node --test",
+    "assets": "sh tools/assets.sh",
+    "balance": "node tools/balance.mjs"
+  }
+}
