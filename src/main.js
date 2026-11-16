@@ -25,26 +25,63 @@ function show(html) {
 }
 
 // ---------- 손맛: 효과음, 진동, 애니메이션 ----------
-let ac;
-function beep(freq, dur = 0.08, type = 'sine', at = 0) {
-  if (st.mute) return;
-  try {
-    ac ??= new AudioContext();
-    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + at;
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(0.07, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
-  } catch {} // 소리를 못 내는 환경에서는 조용히 넘어간다
+// 전부 Web Audio 합성이라 소리 파일이 없다.
+let ac, hiss;
+function tone(freq, dur = 0.1, type = 'sine', at = 0, vol = 0.07, to) {
+  if (st.mute || !ac) return;
+  const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + at;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur); // 음높이 미끄러짐
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.008); // 짧은 어택: 딱 소리 방지
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+// 걸러낸 백색소음: 지글지글, 휙
+function noise(dur, vol = 0.05, hp = 3000, at = 0) {
+  if (st.mute || !ac) return;
+  if (!hiss) {
+    hiss = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+    const d = hiss.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime + at;
+  n.buffer = hiss; f.type = 'highpass'; f.frequency.value = hp;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.connect(f).connect(g).connect(ac.destination); n.start(t); n.stop(t + dur);
 }
 const SFX = {
-  pour: () => beep(240, 0.07, 'triangle'),
-  perfect: () => { beep(660); beep(990, 0.14, 'sine', 0.07); },
-  under: () => beep(300, 0.1, 'triangle'), over: () => beep(260, 0.12, 'triangle'),
-  burnt: () => beep(110, 0.22, 'sawtooth'),
-  sale: () => { beep(1200, 0.05, 'square'); beep(1600, 0.1, 'square', 0.05); },
-  lost: () => beep(160, 0.18, 'sawtooth'),
-  nostock: () => beep(180, 0.1, 'square'), full: () => beep(180, 0.1, 'square'),
+  pour: () => { noise(0.35, 0.05); tone(320, 0.12, 'sine', 0, 0.06, 140); },
+  flip: () => { noise(0.12, 0.04, 1500); tone(500, 0.08, 'triangle', 0.03, 0.04, 760); },
+  perfect: () => [784, 988, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', i * 0.06, 0.06)),
+  under: () => { tone(392, 0.12, 'triangle'); tone(330, 0.18, 'triangle', 0.1); },
+  over: () => { tone(220, 0.16, 'triangle', 0, 0.07, 160); noise(0.2, 0.04, 2000); },
+  burnt: () => { tone(160, 0.35, 'sawtooth', 0, 0.05, 60); noise(0.4, 0.06, 800); },
+  sale: () => { tone(1319, 0.09, 'sine', 0, 0.06); tone(1760, 0.3, 'sine', 0.07, 0.06); tone(3520, 0.2, 'sine', 0.07, 0.015); },
+  lost: () => { tone(311, 0.16, 'triangle'); tone(233, 0.28, 'triangle', 0.14); },
+  nostock: () => { tone(196, 0.07, 'square', 0, 0.03); tone(196, 0.07, 'square', 0.1, 0.03); },
 };
+SFX.full = SFX.nostock;
+
+// 배경음악: 5음계 8마디를 계속 돌린다. [미디 음, 박] — 0은 쉼표
+const TUNE = [[64, 1], [67, 1], [69, 1], [67, 1], [64, 1], [62, 1], [60, 2], [62, 1], [64, 1], [67, 1], [64, 1], [62, 3], [0, 1],
+  [64, 1], [67, 1], [69, 1], [72, 1], [69, 1], [67, 1], [64, 2], [67, 1], [64, 1], [62, 1], [64, 1], [60, 3], [0, 1]];
+const BASS = [48, 45, 41, 43, 48, 45, 43, 48], BEAT = 0.6;
+const hz = m => 440 * 2 ** ((m - 69) / 12);
+let bgmI = 0, bgmT = null;
+setInterval(() => {
+  if (st.mute || !ac || ac.state !== 'running' || document.hidden) return (bgmT = null); // 끊겼다 돌아오면 처음부터
+  if (bgmT == null || bgmT < ac.currentTime) { bgmT = ac.currentTime + 0.1; bgmI = 0; }
+  while (bgmT < ac.currentTime + 0.4) {
+    const [m, beats] = TUNE[bgmI], at = bgmT - ac.currentTime;
+    if (m) tone(hz(m), beats * BEAT * 0.95, 'triangle', at, 0.022);
+    const beat = TUNE.slice(0, bgmI).reduce((a, n) => a + n[1], 0);
+    if (beat % 4 === 0) tone(hz(BASS[beat / 4]), BEAT * 3.5, 'sine', at, 0.035);
+    bgmT += beats * BEAT;
+    bgmI = (bgmI + 1) % TUNE.length;
+  }
+}, 100);
+// 브라우저는 첫 입력 뒤에만 소리를 허용한다
+addEventListener('pointerdown', () => { try { ac ??= new AudioContext(); ac.resume(); } catch {} });
 const buzz = ms => navigator.vibrate?.(ms);
 
 function anim(el, cls) {
@@ -188,7 +225,7 @@ function startDay() {
     for (const f of day.fx) {
       const slot = els.slots[f.slot];
       if (f.t === 'sale') { float(slot, `+${won(f.pay)}${f.allPerfect ? ' ✨' : ''}`, 'sale'); SFX.sale(); }
-      else if (f.t === 'flip') { anim(els.molds[f.i], 'flip'); float(els.molds[f.i], '🤖 뒤집음', 'auto'); SFX.pour(); }
+      else if (f.t === 'flip') { anim(els.molds[f.i], 'flip'); float(els.molds[f.i], '🤖 뒤집음', 'auto'); SFX.flip(); }
       else { float(slot, '💢 가 버렸다', 'lost'); SFX.lost(); buzz(60); }
     }
 
@@ -306,6 +343,7 @@ const acts = {
     const el = els.molds[i], wasA = day.molds[i].s === 'a', r = S.tapMold(day, st.run, +i, sel);
     if (r === 'auto') return float(el, '알아서 뒤집어요', 'auto');
     SFX[r]();
+    if (wasA) SFX.flip();
     anim(el, wasA ? 'flip' : 'pop');
     if (r === 'pour') return;
     float(el, FEEDBACK[r], r);
