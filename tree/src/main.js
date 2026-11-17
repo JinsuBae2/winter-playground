@@ -4,7 +4,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -55,17 +54,11 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.3, 0.45, 1.0); // �
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-// 실내 조명: 실제 방 사진(HDRI)이 있으면 그걸, 없으면 Three.js 기본 방으로 반사와 주변광을 만든다
-const pmrem = new THREE.PMREMGenerator(renderer);
-const useEnv = tex => {
-  scene.environment = tex; scene.background = tex;
-  scene.backgroundBlurriness = 0.35;
-};
-useEnv(pmrem.fromScene(new RoomEnvironment(), 0.04).texture);
-new RGBELoader().load('assets/room.hdr', hdr => {
-  hdr.mapping = THREE.EquirectangularReflectionMapping;
-  useEnv(pmrem.fromEquirectangular(hdr).texture); hdr.dispose();
-}, undefined, () => {}); // 파일이 없으면 기본 방 그대로
+// 실내 조명: Three.js 기본 방으로 반사와 주변광을 만든다
+// shortcut: 실제 방 사진(HDRI)을 쓰면 더 실사에 가깝다. 파일을 넣을 때 RGBELoader 로 바꾼다
+const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environment = scene.background = env;
+scene.backgroundBlurriness = 0.35;
 
 const key = new THREE.DirectionalLight('#ffe6c4', 1.6);
 key.position.set(2.2, 4, 2.6);
