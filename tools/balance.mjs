@@ -1,5 +1,5 @@
 // 자동 플레이로 20일 런을 여러 번 돌려 엔딩 분포와 매출을 본다. 수치를 바꾼 뒤 `npm run balance`.
-import * as S from '../src/sim.js';
+import * as S from '../tycoon/src/sim.js';
 
 const N = +process.argv[2] || 300;
 // sd: 누르는 타이밍 오차(게이지 단위), react: 한 번 누른 뒤 다음 동작까지 걸리는 초

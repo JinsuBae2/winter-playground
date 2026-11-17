@@ -3,18 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#2b1a10">
-  <title>붕어빵 타이쿤</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/web/icon-192.png">
-  <link rel="apple-touch-icon" href="assets/web/icon-180.png">
+  <meta name="theme-color" content="#14202b">
+  <title>겨울 놀이터</title>
+  <link rel="icon" href="tycoon/assets/web/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root { --bg: #14202b; --text: #f6f1e7; --dim: #b9c4cf; --accent: #f0c35b; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(ellipse at 50% 0%, #2c4257, var(--bg) 70%) fixed;
+      font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { font: 400 40px Jua, sans-serif; text-align: center; margin: 0; color: var(--accent); text-shadow: 0 4px 12px #0008; }
+    .sub { text-align: center; color: var(--dim); margin: 6px 0 28px; }
+    .games { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    a.card {
+      display: block; text-decoration: none; color: inherit; border-radius: 18px; overflow: hidden;
+      background: #ffffff10; border: 1px solid #ffffff22; box-shadow: 0 8px 24px #0006;
+      transition: transform .15s, box-shadow .15s;
+    }
+    a.card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px #0008; }
+    a.card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #0003; }
+    .card div { padding: 14px 16px 16px; }
+    .card b { font: 400 24px Jua, sans-serif; }
+    .card p { margin: 4px 0 0; color: var(--dim); font-size: 15px; }
+  </style>
 </head>
 <body>
-  <main id="app"></main>
-  <p id="toast" role="status" aria-live="polite"></p>
-  <script type="module" src="src/main.js"></script>
+  <main>
+    <h1>겨울 놀이터</h1>
+    <p class="sub">하고 싶은 걸 골라 보세요</p>
+    <nav class="games">
+      <a class="card" href="tycoon/">
+        <img src="tycoon/assets/web/scene_bg.webp" alt="">
+        <div><b>붕어빵 타이쿤</b><p>겨울 한 철 붕어빵 노점을 굽고 키워서 결말을 모으는 경영 게임</p></div>
+      </a>
+      <a class="card" href="tree/">
+        <img src="tree/assets/cover.webp" alt="">
+        <div><b>트리 꾸미기</b><p>나무를 고르고 오너먼트, 전구, 별로 나만의 3D 크리스마스 트리 만들기</p></div>
+      </a>
+    </nav>
+  </main>
 </body>
 </html>

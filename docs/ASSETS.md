@@ -1,6 +1,6 @@
 # 이미지 에셋 목록
 
-지금 게임의 그림은 전부 코드로 그린 SVG다. 아래 이미지를 만들어 `assets/` 폴더에 **파일 이름 그대로** 넣으면 교체한다.
+지금 게임의 그림은 전부 코드로 그린 SVG다. 아래 이미지를 만들어 `tycoon/assets/` 폴더에 **파일 이름 그대로** 넣으면 교체한다.
 전부 한꺼번에 만들 필요 없다. 1순위만 있어도 영업 화면의 인상이 바뀐다.
 
 ## 공통 규칙
@@ -102,11 +102,11 @@ snow-covered trees, NO buildings, empty lots where buildings will be placed, por
 | `fill_pat.png` `fill_cream.png` `fill_goguma.png` `fill_matcha.png` `fill_pizza.png` `fill_dubai.png` `fill_mint.png` | 128×128 | 소 아이콘 7개(지금은 이모지) |
 | `up_mold.png` `up_fire.png` `up_warmer.png` `up_sign.png` `up_price.png` | 128×128 | 가구상점 물건 5개(지금은 이모지) |
 
-엔딩 삽화의 장면은 `src/data.js`의 `ENDINGS` 각 줄 `text`에 적힌 문장을 그대로 묘사하면 된다.
+엔딩 삽화의 장면은 `tycoon/src/data.js`의 `ENDINGS` 각 줄 `text`에 적힌 문장을 그대로 묘사하면 된다.
 
 ## 넣은 뒤
 
-`assets/`에 PNG를 넣고 `npm run assets`를 돌리면 `assets/web/`에 압축본이 생기고 게임에 반영된다.
+`tycoon/assets/`에 PNG를 넣고 `npm run assets`를 돌리면 `tycoon/assets/web/`에 압축본이 생기고 게임에 반영된다.
 
-`assets/`에 파일을 넣고 알려 주면, 있는 파일만 그림으로 바꾸고 없는 것은 지금의 SVG를 그대로 쓴다.
+`tycoon/assets/`에 파일을 넣고 알려 주면, 있는 파일만 그림으로 바꾸고 없는 것은 지금의 SVG를 그대로 쓴다.
 크기는 권장값이다. 가로세로 비율만 맞으면 더 커도 된다.

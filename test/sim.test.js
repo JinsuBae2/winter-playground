@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as S from '../src/sim.js';
-import { RENT, EVENTS, ENDINGS, FILLINGS, DEV_ORDER, DEV_COST } from '../src/data.js';
+import * as S from '../tycoon/src/sim.js';
+import { RENT, EVENTS, ENDINGS, FILLINGS, DEV_ORDER, DEV_COST } from '../tycoon/src/data.js';
 
 const HOUR = 3.6e6;
 const setup = () => {

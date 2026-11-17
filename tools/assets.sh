@@ -1,8 +1,8 @@
 #!/bin/sh
-# assets/*.png 원본을 게임이 쓰는 가벼운 assets/web/*.webp 로 바꾼다. 원본은 건드리지 않는다.
-# 새 이미지를 assets/ 에 넣은 뒤 `npm run assets` 로 다시 돌린다. cwebp 필요(brew install webp).
+# tycoon/assets/*.png 원본을 게임이 쓰는 가벼운 tycoon/assets/web/*.webp 로 바꾼다. 원본은 건드리지 않는다.
+# 새 이미지를 tycoon/assets/ 에 넣은 뒤 `npm run assets` 로 다시 돌린다. cwebp 필요(brew install webp).
 set -e
-cd "$(dirname "$0")/../assets"
+cd "$(dirname "$0")/../tycoon/assets"
 mkdir -p web
 for f in *.png; do
   n="${f%.png}"

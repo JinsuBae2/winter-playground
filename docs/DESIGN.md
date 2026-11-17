@@ -199,7 +199,7 @@
 
 ## 8. 그림과 화면
 
-- **그림은 생성 이미지**다. 원본은 `assets/*.png`, 게임이 읽는 것은 `npm run assets`로 압축한 `assets/web/*.webp`(18MB → 2.5MB). 목록과 규격은 [ASSETS.md](ASSETS.md).
+- **그림은 생성 이미지**다. 원본은 `tycoon/assets/*.png`, 게임이 읽는 것은 `npm run assets`로 압축한 `tycoon/assets/web/*.webp`(18MB → 2.5MB). 목록과 규격은 [ASSETS.md](ASSETS.md).
   붕어빵은 덜 익음·황금·탐 세 장을 겹쳐 놓고 익은 정도만큼 위 장을 드러낸다. 엔딩 삽화는 파일이 있는 것만 보인다.
   소 아이콘과 상점 물건 아이콘도 그림이다(자동 뒤집개 아이콘만 아직 이모지).
 - **붕어빵 틀**: 실제 회전식 틀처럼 가운데 불을 둔 주물 원판 둘레에 칸(4·6·9개)이 놓인다. 굽기 게이지는 칸 테두리를 한 바퀴 도는 흰 점이고, 초록 호에 올 때 누르면 완벽이다.
@@ -214,10 +214,10 @@
 
 ```
 index.html, style.css
-src/data.js     콘텐츠 표 (소, 동네, 날씨, 업그레이드, 이벤트, 엔딩, 단골)
-src/sim.js      순수 게임 로직 — DOM을 모른다. 테스트 대상
-src/save.js     localStorage 저장 (키 하나, 버전 필드)
-src/main.js     화면 그리기와 입력
+tycoon/src/data.js     콘텐츠 표 (소, 동네, 날씨, 업그레이드, 이벤트, 엔딩, 단골)
+tycoon/src/sim.js      순수 게임 로직 — DOM을 모른다. 테스트 대상
+tycoon/src/save.js     localStorage 저장 (키 하나, 버전 필드)
+tycoon/src/main.js     화면 그리기와 입력
 test/sim.test.js
 manifest.json, sw.js, icon.svg   홈 화면 설치·오프라인 실행
 ```
