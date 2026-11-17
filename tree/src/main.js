@@ -152,17 +152,22 @@ scene.add(treeGroup, floorDecor);
 let tree = null, star = null, dims = { H: 1.8 };
 
 // ---------- 상태, 저장, 되돌리기 ----------
-let state = D.restore(safeGet()) ?? D.blank();
-const history = [];
+// 공유 링크(#t=...)로 들어오면 친구의 트리를 보기 전용으로 연다. 내 저장본은 건드리지 않는다.
+const sharedCode = new URLSearchParams(location.hash.slice(1)).get('t');
+const shared = sharedCode && await D.decodeShare(sharedCode);
+let viewing = !!shared;
+let state = shared || (D.restore(safeGet()) ?? D.blank());
+if (sharedCode && !shared) history.replaceState(null, '', location.pathname); // 망가진 링크는 내 트리로
+const undoStack = [];
 function safeGet() { try { return localStorage.getItem(D.KEY); } catch { return null; } }
 function commit(change) {
-  history.push(D.serialize(state));
-  if (history.length > 80) history.shift();
+  undoStack.push(D.serialize(state));
+  if (undoStack.length > 80) undoStack.shift();
   change(state);
   apply();
 }
 function apply() {
-  try { localStorage.setItem(D.KEY, D.serialize(state)); } catch {} // 사생활 보호 모드: 저장 없이 계속
+  if (!viewing) try { localStorage.setItem(D.KEY, D.serialize(state)); } catch {} // 사생활 보호 모드: 저장 없이 계속
   syncTree().then(rebuild);
   applyMood();
   renderPanel();
@@ -440,7 +445,7 @@ canvas.addEventListener('pointerup', e => {
 canvas.addEventListener('pointercancel', () => { if (stroke) finishStroke(); });
 
 function finishStroke() {
-  const pts = D.resample(stroke, 0.03).map(round);
+  const pts = D.resample(stroke, 0.06).map(round); // 그릴 때 어차피 8cm 간격으로 다듬으므로, 저장·공유 링크를 짧게
   stroke = null; controls.enabled = true;
   preview.visible = false;
   if (D.length(pts) < 0.08) return toast('트리 위를 조금 더 길게 그어 주세요');
@@ -535,7 +540,7 @@ $('#tabs').addEventListener('click', e => {
   if (b) { tab = b.dataset.tab; renderPanel(); }
 });
 $('#undo').onclick = () => {
-  const prev = history.pop();
+  const prev = undoStack.pop();
   if (!prev) return toast('되돌릴 게 없어요');
   state = D.restore(prev); apply();
 };
@@ -545,6 +550,28 @@ $('#shot').onclick = () => {
   a.href = canvas.toDataURL('image/png'); a.download = 'my-christmas-tree.png'; a.click();
   toast('사진을 저장했어요');
 };
+$('#share').onclick = async () => {
+  const url = `${location.origin}${location.pathname}#t=${await D.encodeShare(state)}`;
+  if (navigator.share) {         // 휴대폰: 카카오톡 등 공유 창
+    try { return await navigator.share({ title: '내 크리스마스 트리', text: '내가 꾸민 트리 구경해 줘 🎄', url }); }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast('링크를 복사했어요. 친구에게 붙여 넣어 보내 주세요'); }
+  catch { prompt('이 링크를 복사해서 보내 주세요', url); }
+};
+
+// 보기 전용 화면의 두 버튼
+$('#mine').onclick = () => { location.href = location.pathname; };
+$('#adopt').onclick = () => {
+  if (D.restore(safeGet())?.items.length && !confirm('지금 내 트리가 이 트리로 바뀌어요. 계속할까요?')) return;
+  viewing = false;
+  document.body.classList.remove('viewing');
+  history.replaceState(null, '', location.pathname);
+  apply(); // 이때 처음으로 내 저장본에 쓴다
+  toast('이제 내 트리예요. 마음껏 고쳐 보세요');
+};
+document.body.classList.toggle('viewing', viewing);
+addEventListener('hashchange', () => location.reload()); // 열린 탭에 다른 공유 링크를 붙여 넣은 경우
 
 let toastT;
 function toast(msg) {

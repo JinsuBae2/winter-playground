@@ -43,11 +43,41 @@ export function drape(pts, sag) {
 
 export const serialize = s => JSON.stringify(s);
 
-// 저장본이 깨졌거나 옛 형식이면 null → 새 트리로 시작
+// 공유 링크로 들어온 값은 누구나 조작할 수 있으므로, 그릴 수 있는 것만 남긴다
+const vec = a => Array.isArray(a) && a.length === 3 && a.every(Number.isFinite);
+const line = a => Array.isArray(a) && a.length > 1 && a.length <= 400 && a.every(vec);
+const VALID = {
+  orn: i => vec(i.p) && ['ball', 'bell', 'cane', 'flake'].includes(i.shape) && ['gloss', 'satin', 'glitter', 'glass'].includes(i.mat) && i.r > 0 && i.r < 0.2,
+  lights: i => line(i.pts) && ['warm', 'cool', 'multi', 'red', 'blue'].includes(i.color),
+  garland: i => line(i.pts) && ['tinsel', 'beads', 'ribbon'].includes(i.style),
+  gift: i => vec(i.p) && vec(i.s) && i.s.every(v => v > 0 && v < 1),
+};
+
+// 저장본이나 공유 링크가 깨졌거나 옛 형식이면 null → 새 트리로 시작
 export function restore(text) {
   try {
     const s = JSON.parse(text);
-    if (s && s.v === 2 && Array.isArray(s.items)) return { ...blank(), ...s };
-  } catch {}
-  return null;
+    if (!s || s.v !== 2 || !Array.isArray(s.items)) return null;
+    return {
+      ...blank(), ...s,
+      species: ['fir', 'spruce', 'pine'].includes(s.species) ? s.species : 'fir',
+      size: [150, 180, 210].includes(s.size) ? s.size : 180,
+      items: s.items.filter(i => i && VALID[i.t]?.(i)).slice(0, 500),
+    };
+  } catch { return null; }
+}
+
+// 공유 링크: 트리 상태를 압축해 URL에 그대로 담는다(서버 없이 GitHub Pages에서 동작)
+const pipe = (bytes, stream) => new Response(new Blob([bytes]).stream().pipeThrough(stream));
+export async function encodeShare(s) {
+  const bytes = new Uint8Array(await pipe(serialize(s), new CompressionStream('deflate-raw')).arrayBuffer());
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+export async function decodeShare(code) {
+  try {
+    const bin = atob(code.replace(/-/g, '+').replace(/_/g, '/'));
+    return restore(await pipe(Uint8Array.from(bin, c => c.charCodeAt(0)), new DecompressionStream('deflate-raw')).text());
+  } catch { return null; }
 }

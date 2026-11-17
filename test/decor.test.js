@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resample, drape, length, blank, serialize, restore, scaleFor } from '../tree/src/decor.js';
+import { resample, drape, length, blank, serialize, restore, scaleFor, encodeShare, decodeShare } from '../tree/src/decor.js';
 
 const near = (a, b) => Math.abs(a - b) < 1e-9;
 
@@ -28,6 +28,30 @@ test('저장본은 그대로 되살아나고, 깨진 저장본은 무시한다',
   assert.equal(restore('{망가짐'), null);
   assert.equal(restore('{"v":1,"items":[]}'), null);
   assert.equal(restore(null), null);
+});
+
+test('공유 링크는 압축했다가 그대로 되살아난다', async () => {
+  const s = blank();
+  s.species = 'pine'; s.night = true;
+  for (let k = 0; k < 6; k++) s.items.push({ t: 'lights', pts: resample([[0.5, 0.3 + k * 0.2, 0], [0, 0.4 + k * 0.2, 0.5], [-0.5, 0.5 + k * 0.2, 0]], 0.06).map(p => p.map(v => +v.toFixed(3))), color: 'multi', size: 'big', mode: 'chase' });
+  for (let k = 0; k < 30; k++) s.items.push({ t: 'orn', shape: 'ball', p: [0.1, k / 20, 0.3], ry: 0.3, color: '#b3121f', mat: 'glitter', r: 0.05 });
+  const code = await encodeShare(s);
+  assert.match(code, /^[A-Za-z0-9_-]+$/); // URL에 그대로 넣을 수 있는 글자만
+  assert.ok(code.length < 4000, `링크가 너무 길다: ${code.length}`);
+  assert.deepEqual(await decodeShare(code), s);
+  assert.equal(await decodeShare('망가진-링크'), null);
+});
+
+test('조작된 링크의 이상한 값은 버린다', () => {
+  const bad = restore(JSON.stringify({ v: 2, species: '../../evil', size: 9999, items: [
+    { t: 'orn', shape: 'ball', p: [0, 1, 0], mat: 'gloss', r: 0.05 },
+    { t: 'orn', shape: 'ball', p: [0, 'x', 0], mat: 'gloss', r: 0.05 },
+    { t: 'lights', pts: [[0, 0, 0]], color: 'warm' },
+    { t: 'script' }, null,
+  ] }));
+  assert.equal(bad.species, 'fir');
+  assert.equal(bad.size, 180);
+  assert.equal(bad.items.length, 1);
 });
 
 test('크기는 180cm 모델 기준 배율', () => {
