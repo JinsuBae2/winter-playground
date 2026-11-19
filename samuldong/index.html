@@ -22,10 +22,17 @@ canvas {display:block;width:100%;height:100%}
 .dock {min-height:96px;margin-top:14px}
 .dock:has(dialog[open]) footer {display:none}
 dialog {position:static;margin:0;width:100%;padding:12px 20px;border:2px solid #253c3b;border-radius:11px;background:#fafcfd;color:#253c3b;text-align:center;box-shadow:0 4px #101f23}
-#level {font:inherit;color:inherit;background:#213842;border:1px solid #79908c;border-radius:5px;padding:2px 6px} #records label {display:flex;align-items:center;gap:4px} #records {align-items:center;gap:4px;flex-wrap:wrap;display:flex;justify-content:space-between;margin:6px 2px;font-size:14px;color:#d4dfdb} #result {display:block}
+/* 타이틀 메뉴: 무대 위에 덮인다. 난이도를 고르면 바로 시작한다 */
+.menu {position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:2.4cqw;background:#192d35d9;text-align:center}
+.menu[hidden] {display:none}
+.menu > b {font-size:clamp(17px,4.2cqw,34px);letter-spacing:-.04em}
+#levels {display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.6cqw,14px)}
+#levels button {display:grid;gap:2px;min-width:clamp(140px,30cqw,250px);padding:clamp(8px,1.6cqw,14px) 10px;touch-action:manipulation}
+#levels b {font-size:clamp(15px,2.8cqw,22px)} #levels small {font-weight:600;font-size:clamp(11px,1.9cqw,14px);opacity:.8}
+#records {align-items:center;gap:4px;flex-wrap:wrap;display:flex;justify-content:space-between;margin:6px 2px;font-size:14px;color:#d4dfdb} #result {display:block}
 dialog b {display:block;font-size:clamp(17px,3vw,25px)}
 button {font:inherit;font-weight:800;border:2px solid #263b39;border-radius:9px;background:#ffca69;color:#233536;padding:8px 20px;cursor:pointer;box-shadow:0 3px #0e2428;touch-action:none;user-select:none;-webkit-user-select:none}
-dialog button {margin-top:6px} button:active,button.pressed {transform:translateY(2px);box-shadow:none}
+dialog button {margin:6px 4px 0} #menu {background:#e3e9ec} button:active,button.pressed {transform:translateY(2px);box-shadow:none}
 button:disabled {opacity:.5;cursor:default}
 footer p {margin:0;font-weight:700} .help {color:#c7d2cb;font-size:14px;margin:8px 0}
 @media (max-width:600px) {
@@ -36,16 +43,17 @@ footer p {margin:0;font-weight:700} .help {color:#c7d2cb;font-size:14px;margin:8
 }
 </style>
 <main>
-<header><a href="../index.html">← 겨울 놀이터</a><span>은빈님의 웹게임</span></header>
+<header><a href="../index.html">← 겨울 놀이터</a></header>
 <h1>사람 몰래 똥싸기 <small>사물똥</small></h1>
-<div id="records"><label>난이도 <select id="level"><option>EASY</option><option selected>NORMAL</option><option>HARD</option><option>EXTRA HARD</option></select></label><strong id="score">0점</strong><span id="best"></span></div>
+<div id="records"><span id="levelName"></span><strong id="score">0점</strong><span id="best"></span></div>
 <div class="stage">
 <canvas width="624" height="410" aria-label="위에서 본 화장실 세 칸, 세면대 세 대와 오른쪽 복도 입구"></canvas>
 <div class="gauge"><strong>0%</strong><span>똥 게이지</span></div>
+<nav class="menu" aria-label="난이도 선택"><b>가운데 칸은 내 자리</b><div id="levels"></div></nav>
 </div>
 <div class="dock">
 <footer><p id="status" role="status">아무도 없는 회사 화장실</p><button id="push" disabled>꾹 힘주기</button></footer>
-<dialog open aria-labelledby="headline"><b id="headline">가운데 칸은 내 자리</b><span id="result">아무도 듣지 않을 때만 힘주세요</span><button id="start">게임 시작</button></dialog>
+<dialog aria-labelledby="headline"><b id="headline"></b><span id="result"></span><button id="start">다시 시작</button><button id="menu">난이도 선택</button></dialog>
 </div>
 <p class="help">버튼이나 스페이스를 누르는 동안 힘줘요. 누가 걷거나, 손을 씻거나, 옆 칸에서 조용히 있으면 들켜요. 옆 칸이 “끙!” 할 때 같이 주면 둘이 1.5배, 셋이 2배! 너무 오래 참으면 빨간 고리가 차서 새어 나와요.</p>
 </main>

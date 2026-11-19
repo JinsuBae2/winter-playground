@@ -1,26 +1,27 @@
 // 장면(타이틀 → 입장 → 플레이 → 들킴 → 결과)을 넘기는 껍데기. 규칙은 sim.js, 그림은 stage.js 가 맡는다.
-import { NAMES, INTRO_SECONDS, STARE_SECONDS } from './data.js';
+import { LEVELS, NAMES, INTRO_SECONDS, STARE_SECONDS } from './data.js';
 import { newGame, step, visitorsAt } from './sim.js';
 import { createStage } from './stage.js';
 
 const $ = s => document.querySelector(s);
 const ui = {
   gauge: $('.gauge'), percent: $('.gauge strong'), dialog: $('dialog'), headline: $('#headline'), result: $('#result'),
-  start: $('#start'), push: $('#push'), status: $('#status'), level: $('#level'), score: $('#score'), best: $('#best'),
+  start: $('#start'), back: $('#menu'), push: $('#push'), status: $('#status'), score: $('#score'), best: $('#best'),
+  menu: $('.menu'), levels: $('#levels'), levelName: $('#levelName'),
 };
+let level = 'NORMAL';
 const draw = createStage($('canvas'));
 
 // ── 기록: 난이도별 최고 점수와 최단 시간. NORMAL 은 예전 버전의 키를 그대로 이어받는다.
-const recordKey = () => (ui.level.value === 'NORMAL' ? 'samuldong.records.v1' : 'samuldong.records.v1.' + ui.level.value);
-function readRecord() {
+const recordKey = name => (name === 'NORMAL' ? 'samuldong.records.v1' : 'samuldong.records.v1.' + name);
+function readRecord(name) {
   try {
-    const saved = JSON.parse(localStorage.getItem(recordKey()));
+    const saved = JSON.parse(localStorage.getItem(recordKey(name)));
     if (saved && Number.isFinite(saved.score) && saved.score >= 0 && Number.isFinite(saved.seconds) && saved.seconds > 0) return saved;
   } catch {}
   return { score: 0, seconds: 0 };
 }
-let record = readRecord();
-ui.level.onchange = () => { record = readRecord(); };
+let record = readRecord(level);
 
 // ── 입력: 스페이스와 버튼 중 하나라도 눌려 있으면 힘주는 중
 const input = {
@@ -55,13 +56,21 @@ function reason() {
 }
 function showResult(headline, detail) {
   ui.headline.textContent = headline; ui.result.textContent = detail;
-  ui.level.disabled = false; ui.start.textContent = '다시 시작';
   ui.dialog.open = true; ui.start.focus({ preventScroll: true });
 }
 const scenes = {
-  title: {},
+  title: { // 난이도 메뉴. 버튼마다 그 난이도의 최고 기록을 보여 준다
+    enter() {
+      game = null; ui.dialog.open = false; ui.menu.hidden = false;
+      for (const button of ui.levels.children) {
+        const name = button.dataset.level, best = readRecord(name);
+        button.innerHTML = `<b>${name}</b><small>동시 ${LEVELS[name].max}명 · ${best.seconds ? '최고 ' + best.score + '점' : '기록 없음'}</small>`;
+        if (name === level) button.focus({ preventScroll: true });
+      }
+    },
+  },
   intro: {
-    enter() { input.clear(); game = newGame(ui.level.value); ui.level.disabled = true; ui.dialog.open = false; },
+    enter() { input.clear(); game = newGame(level); ui.menu.hidden = true; ui.dialog.open = false; },
     update() { if (clock >= INTRO_SECONDS) go('play'); },
   },
   play: {
@@ -78,12 +87,20 @@ const scenes = {
     enter() {
       input.clear();
       record = { score: Math.max(record.score, Math.round(game.points)), seconds: Math.min(record.seconds || Infinity, game.time) };
-      try { localStorage.setItem(recordKey(), JSON.stringify(record)); } catch {} // 사생활 보호 모드 등: 저장 없이 계속 플레이
+      try { localStorage.setItem(recordKey(level), JSON.stringify(record)); } catch {} // 사생활 보호 모드 등: 저장 없이 계속 플레이
       showResult('성공! 아무도 눈치채지 못했다', Math.round(game.points) + '점 · ' + game.time.toFixed(1) + '초 클리어');
     },
   },
 };
-ui.start.onclick = () => go('intro');
+for (const name of Object.keys(LEVELS)) {
+  const button = document.createElement('button');
+  button.dataset.level = name;
+  button.onclick = () => { level = name; record = readRecord(name); go('intro'); };
+  ui.levels.append(button);
+}
+ui.start.onclick = () => go('intro'); // 같은 난이도로 한 판 더
+ui.back.onclick = () => go('title');
+scenes.title.enter();
 if (location.search === '?debug') window.debug = () => ({ scene, clock, game }); // 브라우저 자동 플레이 확인용
 
 // ── 화면: 무대(캔버스)와 HUD 를 지금 상태대로 그린다
@@ -116,7 +133,8 @@ function render() {
   const message = statusText(held);
   if (ui.status.textContent !== message) ui.status.textContent = message;
   ui.score.textContent = Math.round(playing ? game.points : 0) + '점';
-  ui.best.textContent = record.seconds ? '최고 ' + record.score + '점 · 최단 ' + record.seconds.toFixed(1) + '초' : '첫 클리어에 도전!';
+  ui.levelName.textContent = scene === 'title' ? '난이도를 고르세요' : level;
+  ui.best.textContent = scene === 'title' ? '' : record.seconds ? '최고 ' + record.score + '점 · 최단 ' + record.seconds.toFixed(1) + '초' : '첫 클리어에 도전!';
   ui.push.disabled = scene !== 'play';
 }
 
