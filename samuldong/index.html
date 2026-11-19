@@ -26,13 +26,25 @@ dialog {position:static;margin:0;width:100%;padding:12px 20px;border:2px solid #
 .menu {position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:2.4cqw;background:#192d35d9;text-align:center}
 .menu[hidden] {display:none}
 .menu > b {font-size:clamp(17px,4.2cqw,34px);letter-spacing:-.04em}
-#levels {display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.6cqw,14px)}
-#levels button {display:grid;gap:2px;min-width:clamp(140px,30cqw,250px);padding:clamp(8px,1.6cqw,14px) 10px;touch-action:manipulation}
-#levels b {font-size:clamp(15px,2.8cqw,22px)} #levels small {font-weight:600;font-size:clamp(11px,1.9cqw,14px);opacity:.8}
+#levels {display:grid;grid-template-columns:1fr 1fr;gap:clamp(5px,1.4cqw,12px)}
+.menu button {display:grid;gap:1px;touch-action:manipulation} .menu small {font-weight:600;font-size:clamp(10px,1.8cqw,14px);opacity:.8}
+#levels button {min-width:clamp(140px,30cqw,250px);padding:clamp(4px,1.3cqw,12px) 10px}
+#levels b {font-size:clamp(14px,2.7cqw,22px)}
+#places,#extras {display:flex;gap:clamp(5px,1.2cqw,10px);justify-content:center}
+#places button,#extras button {padding:clamp(3px,.9cqw,8px) clamp(8px,2cqw,18px);font-size:clamp(12px,2.1cqw,16px);background:#e3e9ec}
+#places button[aria-pressed=true] {background:#ffca69}
+/* 들킨 도감 */
+.album {position:absolute;inset:0;overflow:auto;padding:3cqw;background:#192d35;text-align:center}
+.album[hidden] {display:none}
+.album b {font-size:clamp(15px,3cqw,24px)}
+#albumList {list-style:none;margin:2cqw auto;padding:0;max-width:640px;display:grid;grid-template-columns:1fr 1fr;gap:.6cqw 3cqw;text-align:left;font-size:clamp(11px,2cqw,15px)}
+#albumList .locked {opacity:.4}
+#albumClose {padding:4px 18px}
+#mute {padding:0 8px;background:none;color:inherit;border-color:#79908c;box-shadow:none;touch-action:manipulation}
 #records {align-items:center;gap:4px;flex-wrap:wrap;display:flex;justify-content:space-between;margin:6px 2px;font-size:14px;color:#d4dfdb} #result {display:block}
 dialog b {display:block;font-size:clamp(17px,3vw,25px)}
 button {font:inherit;font-weight:800;border:2px solid #263b39;border-radius:9px;background:#ffca69;color:#233536;padding:8px 20px;cursor:pointer;box-shadow:0 3px #0e2428;touch-action:none;user-select:none;-webkit-user-select:none}
-dialog button {margin:6px 4px 0} #menu {background:#e3e9ec} button:active,button.pressed {transform:translateY(2px);box-shadow:none}
+dialog button {margin:6px 4px 0} #menu,#share {background:#e3e9ec} button:active,button.pressed {transform:translateY(2px);box-shadow:none}
 button:disabled {opacity:.5;cursor:default}
 footer p {margin:0;font-weight:700} .help {color:#c7d2cb;font-size:14px;margin:8px 0}
 @media (max-width:600px) {
@@ -45,17 +57,22 @@ footer p {margin:0;font-weight:700} .help {color:#c7d2cb;font-size:14px;margin:8
 <main>
 <header><a href="../index.html">← 겨울 놀이터</a></header>
 <h1>사람 몰래 똥싸기 <small>사물똥</small></h1>
-<div id="records"><span id="levelName"></span><strong id="score">0점</strong><span id="best"></span></div>
+<div id="records"><span id="levelName"></span><strong id="score">0점</strong><span id="best"></span><button id="mute" aria-label="소리 끄기"></button></div>
 <div class="stage">
 <canvas width="624" height="410" aria-label="위에서 본 화장실 세 칸, 세면대 세 대와 오른쪽 복도 입구"></canvas>
 <div class="gauge"><strong>0%</strong><span>똥 게이지</span></div>
-<nav class="menu" aria-label="난이도 선택"><b>가운데 칸은 내 자리</b><div id="levels"></div></nav>
+<nav class="menu" aria-label="게임 메뉴">
+<div id="places" role="group" aria-label="장소"></div>
+<div id="levels"></div>
+<div id="extras"><button id="daily"></button><button id="endless"></button><button id="albumOpen"></button></div>
+</nav>
+<section class="album" hidden aria-label="들킨 도감"><b>들킨 도감</b><ul id="albumList"></ul><button id="albumClose">닫기</button></section>
 </div>
 <div class="dock">
 <footer><p id="status" role="status">아무도 없는 회사 화장실</p><button id="push" disabled>꾹 힘주기</button></footer>
-<dialog aria-labelledby="headline"><b id="headline"></b><span id="result"></span><button id="start">다시 시작</button><button id="menu">난이도 선택</button></dialog>
+<dialog aria-labelledby="headline"><b id="headline"></b><span id="result"></span><button id="start">다시 시작</button><button id="menu">메뉴</button><button id="share">공유</button></dialog>
 </div>
-<p class="help">버튼이나 스페이스를 누르는 동안 힘줘요. 누가 걷거나, 손을 씻거나, 옆 칸에서 조용히 있으면 들켜요. 옆 칸이 “끙!” 할 때 같이 주면 둘이 1.5배, 셋이 2배! 너무 오래 참으면 빨간 고리가 차서 새어 나와요.</p>
+<p class="help">버튼이나 스페이스를 누르는 동안 힘줘요. 누가 걷거나, 손을 씻거나, 옆 칸에서 조용히 있으면 들켜요. 옆 칸이 “끙!” 할 때 같이 주면 둘이 1.5배, 셋이 2배! 너무 오래 참으면 빨간 고리가 차서 새어 나와요. 통화 중인 사람은 못 듣고, 핸드드라이어가 도는 동안은 아무도 못 들어요.</p>
 </main>
 <script type="module" src="src/main.js"></script>
 </html>

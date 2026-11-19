@@ -37,7 +37,7 @@ export function createStage(canvas) {
   new ResizeObserver(resize).observe(canvas);
   window.addEventListener('resize',resize);
   resize();
-  function floor() {
+  function floor(place) {
     if(plate.naturalWidth) c.drawImage(plate,216,70,624,410);
     else rect(216,70,624,410,'#e6eaec',null);
     // shortcut: 렌더에 남은 모서리 검은 점을 벽 색으로 덮는다. make_restroom.py 를 고쳐 다시 구우면 지운다.
@@ -46,7 +46,10 @@ export function createStage(canvas) {
       rect(x-15,90,30,15,'#425260',null,3);
       label('0'+(i+1),x,98,11,cream);
     });
-    label('복도',799,113,14,'#52616e');
+    // 왼쪽 벽 핸드드라이어
+    rect(245,331,11,32,'#c9d2d8','#57656c',3);rect(254,341,4,12,'#6f7d86',null,1);
+    if(place.tint) {c.fillStyle=place.tint;c.fillRect(216,70,624,410);}
+    label(place.name,799,113,14,'#52616e');
     label('입구',801,366,14,'#52616e');
   }
 
@@ -65,9 +68,11 @@ export function createStage(canvas) {
   }
   // look·turn: 들켰을 때 고개만 돌린다. puff: 숨 들이쉬며 부푼다. flush: 얼굴이 달아오른다.
   function actor(x,y,color,angle,act,time,{look=0,turn=0,puff=0,flush=0}={}) {
-    const step=Math.sin(time*(act==='shake'?34:13)),walk=act==='walk'||act==='approach'||act==='depart';
+    const quick=act==='shake'||act==='knock';
+    const step=Math.sin(time*(quick?34:13)),walk=['walk','approach','depart','phone'].includes(act);
     const strain=act==='strain',cheer=act==='cheer',sit=strain||cheer||act==='ready'||act==='inhale';
-    const sink=act==='wash'||act==='shake';
+    const sink=act==='wash'||act==='shake'||act==='dry'||act==='knock';
+    const reach=act==='dry'?34:act==='knock'?30:55; // 팔을 뻗는 거리: 세면대, 드라이어, 문
     c.save();c.translate(x,y);
     ellipse(2,3,24,21,'#354b3a2b',null);
     c.rotate(angle);c.scale(1+puff*.13,1+puff*.13);
@@ -76,11 +81,13 @@ export function createStage(canvas) {
       const foot=sit?18:walk?side*step*7:5;
       line(side*8,3,side*13,foot+6,ink,4);
       ellipse(side*13,foot+7,5,7,'#536050');
-      if(sink) {
-        const wrist=side*5+step*(act==='shake'?5:2);
-        line(side*13,4,side*20,28,ink,4);
-        line(side*20,28,wrist,55,'#c79c7c',4);
-        ellipse(wrist,56,5,5,'#efba8d');
+      if(act==='phone' && side>0) { // 한 손은 전화기를 귀에 댄다
+        line(13,-1,21,-12,ink,4);rect(17,-24,7,13,'#2b3640',null,2);
+      } else if(sink && !(act==='knock' && side<0)) {
+        const wrist=side*5+step*(quick?5:2), out=act==='knock'?reach+step*4:reach;
+        line(side*13,4,side*20,out*.5,ink,4);
+        line(side*20,out*.5,wrist,out,'#c79c7c',4);
+        ellipse(wrist,out+1,5,5,'#efba8d');
       } else {
         const hand=cheer?-24+step*4:sit?14:walk?-side*step*7:4;
         line(side*13,-1,side*24,hand-5,ink,4);
@@ -133,26 +140,37 @@ export function createStage(canvas) {
     label(text,x,y+1,16);
   }
   const limit=n=>Math.max(0,Math.min(1,n));
-  return function draw({phase,time,guests,held,leak,urge,reaction,culprits}) {
-    floor();
+  return function draw({phase,time,guests,held,leak,urge,reaction,culprits,place,close,player}) {
+    floor(place);
     const intro=phase==='intro', active=phase!=='title'&&!intro;
     const caught=phase==='caught'||phase==='lost', won=phase==='won';
     const still=caught?time-reaction:time; // 들킨 순간의 자세 그대로 멈춘다
     let px=intro?852-342*limit(time/1.25):510;
     const py=intro?347-195*limit((time-1.25)/.85):152;
     if(phase==='play' && !held && urge>.7) px+=Math.sin(time*40)*5*(urge-.7);
-    if(phase!=='title') {
-      const act=intro&&time<2.1?'walk':intro&&time<2.55?'stand':won?'cheer':held?'strain':'ready';
-      const yaw=intro?(time<1.25?1.85:Math.PI*(1-limit((time-2.1)/.43))):0;
-      actor(px,py,'#eab456',yaw,act,still,{flush:caught?1:active&&!won?Math.max(urge*.8,held?.9:0):0});
-      if(won) for(let n=0;n<6;n++) {
-        const a=n*Math.PI/3+time, r=36+5*Math.sin(time*7+n);
-        line(px+Math.cos(a)*r,py+Math.sin(a)*r,px+Math.cos(a)*(r+9),py+Math.sin(a)*(r+9),'#e5a93b',3);
+    const knocked=guests.some(g=>g.act==='knock');
+    if(won) { // 태연하게 문 열고 나와 손 씻고 나간다
+      const g=player, moving=g.act==='walk'||g.act==='depart';
+      if(g.act!=='away') {
+        if(g.act==='wash') ellipse(g.x,416,22+3*Math.sin(time*6),10,null,'#6fb3c4');
+        actor(g.x,g.y,'#eab456',moving?-g.heading:0,g.act,time);
+        if(g.act==='cheer') {
+          for(let n=0;n<6;n++) {
+            const a=n*Math.PI/3+time, r=36+5*Math.sin(time*7+n);
+            line(g.x+Math.cos(a)*r,g.y+Math.sin(a)*r,g.x+Math.cos(a)*(r+9),g.y+Math.sin(a)*(r+9),'#e5a93b',3);
+          }
+          bubble('후련~',g.x,g.y-35);
+        }
       }
-      const word=caught?(leak&&reaction<.7?'뿡!':'헉!'):won?'후련~':leak?'뿡!':phase==='play'&&time<1.8?'나':'';
+      door(lanes[1],g.act==='cheer'?1:g.act==='open'?1-limit(g.elapsed/.45):0);
+    } else if(phase!=='title') {
+      const act=intro&&time<2.1?'walk':intro&&time<2.55?'stand':held?'strain':'ready';
+      const yaw=intro?(time<1.25?1.85:Math.PI*(1-limit((time-2.1)/.43))):0;
+      actor(px,py,'#eab456',yaw,act,still,{flush:caught?1:active?Math.max(urge*.8,held?.9:0):0});
+      const word=caught?(leak&&reaction<.7?'뿡!':'헉!'):leak?'뿡!':knocked?'있어요!':close?'아슬아슬!':phase==='play'&&time<1.8?'나':'';
       if(word) bubble(word,px,py-35);
     }
-    door(lanes[1],active?1:intro?limit((time-2.1)/.45):0);
+    if(!won) door(lanes[1],active?1:intro?limit((time-2.1)/.45):0);
     for(const lane of [lanes[0],lanes[2]]) {
       const g=guests.find(g=>g.lane===lane);
       let closed=0;
@@ -164,8 +182,8 @@ export function createStage(canvas) {
     for(const g of guests) {
       if(g.act==='away') continue;
       const y=g.y;
-      const motion=g.act==='walk'||g.act==='approach'||g.act==='depart';
-      const angle=motion?-g.heading:0;
+      const motion=['walk','approach','depart','phone'].includes(g.act);
+      const angle=motion?-g.heading:g.act==='dry'?Math.PI/2:g.act==='knock'?Math.PI:0; // 드라이어는 왼쪽 벽, 노크는 내 칸 문을 본다
       const target=Math.atan2(g.x-510,152-y)-angle;
       const look=Math.atan2(Math.sin(target),Math.cos(target));
       // 정적이 흐른 뒤 들은 사람이 먼저, 나머지가 한 박자 늦게 고개만 돌린다.
@@ -173,6 +191,10 @@ export function createStage(canvas) {
       const turn=caught?limit((reaction-(heard?.7:1.15))/.1):0;
       if(turn) {
         c.setLineDash([4,7]);line(g.x,y,510,152,heard?'#c2452d':'#af695288',heard?2.5:1.5);c.setLineDash([]);
+      }
+      if(g.act==='dry') for(let n=0;n<3;n++) { // 드라이어 바람
+        const blow=(time*40+n*7)%18;
+        line(258+blow,340+n*7,264+blow,340+n*7,'#8aa3b0',2);
       }
       if(g.act==='wash') { // 물이 나오는 동안만 물줄기와 물결이 보인다. 손을 털 때는 끊긴다.
         ellipse(g.x,416,22+3*Math.sin(time*6),10,null,'#6fb3c4');
@@ -185,6 +207,7 @@ export function createStage(canvas) {
         {look,turn,puff:g.act==='inhale'?limit(g.elapsed/.5):0,flush:g.act==='strain'?.9:0});
       // 말풍선은 행동이 바뀌는 순간에만 잠깐 뜬다. 판단은 몸짓을 보고 한다.
       const word=caught?(turn?(heard?'…?!':'…?'):'')
+        :g.act==='phone'?'여보세요':g.act==='dry'?'위이잉':g.act==='knock'?'똑똑' // 소리가 나는 동안 계속 보인다
         :g.elapsed>.7?'':{strain:'끙!',inhale:'스읍',wash:'쏴아',shake:'탈탈',open:'찰칵',close:'찰칵',approach:'또각'}[g.act];
       if(word) bubble(word,g.x,y-35);
     }
