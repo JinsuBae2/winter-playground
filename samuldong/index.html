@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사람 몰래 똥싸기 · 겨울 놀이터</title>
+<style>
+* {box-sizing:border-box}
+body {margin:0;background:#192d35;color:#f5f8fa;font:16px/1.5 system-ui,"Apple SD Gothic Neo",sans-serif}
+main {max-width:clamp(320px,(100dvh - 300px)*1.52,860px);margin:auto;padding:18px clamp(10px,3vw,30px) 26px}
+header,footer,.bar {display:flex;align-items:center;justify-content:space-between;gap:12px}
+header {border-bottom:1px solid #647776;padding-bottom:10px;font-size:14px}
+a {color:inherit} header a {text-decoration:none}
+h1 {font-size:clamp(29px,6vw,52px);letter-spacing:-.065em;margin:12px 0 8px}
+h1 small {font-size:.3em;letter-spacing:0;color:#ffc667;margin-left:.5em}
+.stage {position:relative;background:#edf1f3;border:3px solid #102628;border-radius:16px;overflow:hidden;box-shadow:0 5px #101f23}
+.stage {aspect-ratio:624/410;container-type:inline-size}
+canvas {display:block;width:100%;height:100%}
+.gauge {position:absolute;left:4.3%;top:73%;width:13%;aspect-ratio:1;border-radius:50%;display:grid;place-content:center;text-align:center;background:radial-gradient(circle,#fafcfd 56%,transparent 57%),conic-gradient(#ba673b var(--amount,0%),#ccd5db 0);border:2px solid #384b44;box-shadow:2px 3px #384b4433;color:#31433c;font-size:1.7cqw}
+.gauge strong {font-size:max(11px,1.6em);line-height:1.1}
+/* 바깥 고리: 참을수록 차오르고, 다 차면 새어 나온다 */
+.gauge::after {content:"";position:absolute;inset:-14%;border-radius:50%;background:conic-gradient(#d9482f var(--urge,0%),#d9482f22 0);mask:radial-gradient(closest-side,transparent 86%,#000 88%);-webkit-mask:radial-gradient(closest-side,transparent 86%,#000 88%)}
+.dock {min-height:96px;margin-top:14px}
+.dock:has(dialog[open]) footer {display:none}
+dialog {position:static;margin:0;width:100%;padding:12px 20px;border:2px solid #253c3b;border-radius:11px;background:#fafcfd;color:#253c3b;text-align:center;box-shadow:0 4px #101f23}
+#level {font:inherit;color:inherit;background:#213842;border:1px solid #79908c;border-radius:5px;padding:2px 6px} #records label {display:flex;align-items:center;gap:4px} #records {align-items:center;gap:4px;flex-wrap:wrap;display:flex;justify-content:space-between;margin:6px 2px;font-size:14px;color:#d4dfdb} #result {display:block}
+dialog b {display:block;font-size:clamp(17px,3vw,25px)}
+button {font:inherit;font-weight:800;border:2px solid #263b39;border-radius:9px;background:#ffca69;color:#233536;padding:8px 20px;cursor:pointer;box-shadow:0 3px #0e2428;touch-action:none;user-select:none;-webkit-user-select:none}
+dialog button {margin-top:6px} button:active,button.pressed {transform:translateY(2px);box-shadow:none}
+button:disabled {opacity:.5;cursor:default}
+footer p {margin:0;font-weight:700} .help {color:#c7d2cb;font-size:14px;margin:8px 0}
+@media (max-width:600px) {
+  main {padding-inline:8px}
+  .gauge span {display:none}
+  footer {flex-direction:column;align-items:stretch;text-align:center}
+  #push {padding:22px;font-size:20px}
+}
+</style>
+<main>
+<header><a href="../index.html">← 겨울 놀이터</a><span>은빈님의 웹게임</span></header>
+<h1>사람 몰래 똥싸기 <small>사물똥</small></h1>
+<div id="records"><label>난이도 <select id="level"><option>EASY</option><option selected>NORMAL</option><option>HARD</option><option>EXTRA HARD</option></select></label><strong id="score">0점</strong><span id="best"></span></div>
+<div class="stage">
+<canvas width="624" height="410" aria-label="위에서 본 화장실 세 칸, 세면대 세 대와 오른쪽 복도 입구"></canvas>
+<div class="gauge"><strong>0%</strong><span>똥 게이지</span></div>
+</div>
+<div class="dock">
+<footer><p id="status" role="status">아무도 없는 회사 화장실</p><button id="push" disabled>꾹 힘주기</button></footer>
+<dialog open aria-labelledby="headline"><b id="headline">가운데 칸은 내 자리</b><span id="result">아무도 듣지 않을 때만 힘주세요</span><button id="start">게임 시작</button></dialog>
+</div>
+<p class="help">버튼이나 스페이스를 누르는 동안 힘줘요. 누가 걷거나, 손을 씻거나, 옆 칸에서 조용히 있으면 들켜요. 옆 칸이 “끙!” 할 때 같이 주면 둘이 1.5배, 셋이 2배! 너무 오래 참으면 빨간 고리가 차서 새어 나와요.</p>
+</main>
+<script type="module" src="src/main.js"></script>
+</html>
